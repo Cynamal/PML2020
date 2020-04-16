@@ -7,4 +7,4 @@ Please note:
 * first method is more likely to be similar to the wining score
 * I don't remember the state of second method. I tried so many combinations in here that and it's all blur right now
 
-Additionally I added my own cross validation method with usage example. It wasn't perfect but allowed me to get similar results as with test set on Kaggle. I implemented it later just for fun and to test myself at later stage (before we've got validation idea from Vladimir). But I didn't use it while implementing the winning models.
+Additionally I added my own cross validation method with usage example. It wasn't perfect but allowed me to get similar results as with test set on Kaggle. I implemented it later just for fun and to test myself at later stage (before we've got validation from Vladimir). But I didn't use it while implementing the winning models.
