@@ -1,14 +1,120 @@
-#!/usr/bin/env python
-# coding: utf-8
+%%writefile custom_tools_2.py
+import pandas as pd
+import numpy as np
+from collections import defaultdict 
 
-# In[17]:
+dict_additional_columns = {
+#     'color_RED': ['RED'],
+#     'color_PINK': ['PINK', 'FUSHIA'],
+#     'color_BLUE': ['BLUE'],
+#     'color_GREEN': ['GREEN'],
+#     'color_WHITE': ['WHITE', 'WHIT'],
+#     'color_BLACK': ['BLACK', 'BLK', 'BLCK'],
+#     'color_CREAM': ['CREAM'],
+#     'color_GOLD': ['GOLD'],
+#     'color_SILVER': ['SILVER'],
+#     'color_COOPER': ['COOPER'],
+#     'color_ASSORTED': ['ASSORTED'],
+    'cat_POSTAGE': ['POSTAGE'],
+    'cat_SAMPLES': ['SAMPLES'],
+    'cat_MANUAL': ['Manual'],
+    'cat_FEES': ['Bank Charges', 'bank charges', 'AMAZON FEE'],
+#     'cat_BAD_DEBT': ['bad debt'],
+#     'cat_SET': ['SET'],
+    'material_WOOD': ['WOOD'],
+    'material_CERAMIC': ['CERAMIC'],
+    'material_GLASS': ['GLASS'],
+#     'material_GEM': ['AMETHYST', 'DIAMANTE', 'RUBY', 'AMBER', 'TURQUISE', 'QUARTZ', 'GEMSTONE', 'CRYSTAL', 'JADE'],
+#     'material_ENAMEL': ['ENAMEL'],
+#     'material_METAL': ['COOPER', 'ZINC', 'BRONZE'],
+    'style_RETRO': ['RETRO'],
+    'style_VINTAGE': ['VINTAGE'],
+    'style_HISTORIC': ['EDWARDIAN', 'FRENCH', 'BAROQUE', 'MOROCCAN', 'ANTIQUE'],
+    'style_MODERN': ['MODERN', 'SCANDINAVIAN'],
+    'type_JEWELRY': ['NECKLAGE', 'BEAD', 'RING', 'JEWEL', 'BRACELET'],
+    'type_CHRISTMAS': ['CHRISTMAS'],
+#     'type_BAG': ['BAG'],
+#     'type_CONTAINER': ['TIN', 'BOX', 'CHEST', 'JAR']
+}
+dict_additional_columns.keys()
 
+countries = ['Saudi Arabia', 'Czech Republic', 'Nigeria', 'Bermuda', 'West Indies', 'Lebanon', 'European Community',
+           'Korea', 'Thailand', 'Brazil']
 
-get_ipython().run_cell_magic('writefile', 'custom_tools_2.py', "import pandas as pd\nimport numpy as np\nfrom collections import defaultdict \n\ndict_additional_columns = {\n#     'color_RED': ['RED'],\n#     'color_PINK': ['PINK', 'FUSHIA'],\n#     'color_BLUE': ['BLUE'],\n#     'color_GREEN': ['GREEN'],\n#     'color_WHITE': ['WHITE', 'WHIT'],\n#     'color_BLACK': ['BLACK', 'BLK', 'BLCK'],\n#     'color_CREAM': ['CREAM'],\n#     'color_GOLD': ['GOLD'],\n#     'color_SILVER': ['SILVER'],\n#     'color_COOPER': ['COOPER'],\n#     'color_ASSORTED': ['ASSORTED'],\n    'cat_POSTAGE': ['POSTAGE'],\n    'cat_SAMPLES': ['SAMPLES'],\n    'cat_MANUAL': ['Manual'],\n    'cat_FEES': ['Bank Charges', 'bank charges', 'AMAZON FEE'],\n#     'cat_BAD_DEBT': ['bad debt'],\n#     'cat_SET': ['SET'],\n    'material_WOOD': ['WOOD'],\n    'material_CERAMIC': ['CERAMIC'],\n    'material_GLASS': ['GLASS'],\n#     'material_GEM': ['AMETHYST', 'DIAMANTE', 'RUBY', 'AMBER', 'TURQUISE', 'QUARTZ', 'GEMSTONE', 'CRYSTAL', 'JADE'],\n#     'material_ENAMEL': ['ENAMEL'],\n#     'material_METAL': ['COOPER', 'ZINC', 'BRONZE'],\n    'style_RETRO': ['RETRO'],\n    'style_VINTAGE': ['VINTAGE'],\n    'style_HISTORIC': ['EDWARDIAN', 'FRENCH', 'BAROQUE', 'MOROCCAN', 'ANTIQUE'],\n    'style_MODERN': ['MODERN', 'SCANDINAVIAN'],\n    'type_JEWELRY': ['NECKLAGE', 'BEAD', 'RING', 'JEWEL', 'BRACELET'],\n    'type_CHRISTMAS': ['CHRISTMAS'],\n#     'type_BAG': ['BAG'],\n#     'type_CONTAINER': ['TIN', 'BOX', 'CHEST', 'JAR']\n}\ndict_additional_columns.keys()\n\ncountries = ['Saudi Arabia', 'Czech Republic', 'Nigeria', 'Bermuda', 'West Indies', 'Lebanon', 'European Community',\n           'Korea', 'Thailand', 'Brazil']\n\ndef get_feats(df):\n    feats = df.select_dtypes([np.number, np.bool]).columns\n    black_list = ['is_canceled', 'is_test', 'price_unit', 'cnt_p_product_orders']\n    return [x for x in feats if x not in black_list]\n\ndef get_invoice_date_parameters(df):\n    df['year'] = df['invoice_date'].dt.year\n    df['month'] = df['invoice_date'].dt.month\n    #df['day'] = df['invoice_date'].dt.day\n    df['hour'] = df['invoice_date'].dt.hour\n    #df['minute'] = df['invoice_date'].dt.minute\n    df['day_of_year'] = df['invoice_date'].dt.dayofyear\n    df['day_of_week'] = df['invoice_date'].dt.dayofweek\n    df['week_of_year'] = df['invoice_date'].dt.weekofyear\n    #df['quarter'] = df['invoice_date'].dt.quarter\n    df['weekend'] = np.where(df['day_of_week'] < 5, 0, 1)\n    return df\n\ndef one_hot_encoding(df, column):\n    df[column] = pd.Categorical(df[column])\n    df = pd.concat([df, pd.get_dummies(df[column], prefix=column)], axis=1)\n    return df\n\ndef get_additional_bool_column_from_description(df):\n    df['description'] = df['description'].astype(str)\n    for column, words in dict_additional_columns.items():\n        df[column] = df['description'].apply(lambda x: any([word in x for word in words]))\n    return df\n\ndef prepare_features(df_all):\n    def group_to_dict(group_key, agg_func=np.sum):\n        train = df_all[ ~df_all['is_canceled'].isnull()]\n        dict_ = train.groupby(group_key)['is_canceled'].agg(agg_func).to_dict()\n        if -1 in dict_: \n            del dict_[-1]\n        mean = np.mean( list(dict_.values()) )\n        return defaultdict(lambda: mean, dict_)    \n    df_all['cnt_customer_cancel'] = df_all['customer_id'].map(group_to_dict('customer_id')).astype('float64')\n    df_all['cnt_customer_orders'] = df_all['customer_id'].map(group_to_dict('customer_id', agg_func=np.size))\n    df_all['ratio_customer_orders'] = (df_all['cnt_customer_cancel']/df_all['cnt_customer_orders']).round(5)\n    \n    #df_all['cnt_product_cancel'] = df_all['stock_code'].map(group_to_dict('customer_id')).astype('float64')\n    #df_all['cnt_product_cancel_country'] = df_all['stock_code'].map(group_to_dict(['customer_id', 'country'])).astype('float64')\n    #df_all['cnt_product_orders'] = df_all['stock_code'].map(group_to_dict('customer_id', agg_func=np.size))\n    #df_all['ratio_product_orders'] = (df_all['cnt_product_cancel']/df_all['cnt_product_orders']).round(5)\n    \n    df_all['cnt_p_product_cancel'] = df_all['stock_code'].map(group_to_dict('stock_code')).astype('float64')\n    #df_all['cnt_p_product_cancel_country'] = df_all['stock_code'].map(group_to_dict(['stock_code', 'country'])).astype('float64')\n    df_all['cnt_p_product_orders'] = df_all['stock_code'].map(group_to_dict('stock_code', agg_func=np.size))\n    df_all['ratio_p_product_orders'] = (df_all['cnt_p_product_cancel']/df_all['cnt_p_product_orders']).round(5)\n    \n    df_all['unknown_buyer'] = np.where(df_all['customer_id'] == -1, True, False)\n    df_all['description_upppercase'] = df_all['description'].str.isupper().fillna(False)\n    #df_all['country_aggregated'] = df_all['country'].apply(lambda x: 'Other' if any([country in x for country in countries]) else x)\n    #df_all['cat_country'] = pd.factorize(df_all['country'])[0]\n    #df_all['cat_country2'] = pd.factorize(df_all['country_aggregated'])[0]\n    #df_all['invalid_transaction'] = \n    df_all['log_price_total'] = np.log2(df_all['price_total'] + 6).round(2)\n    df_all = get_invoice_date_parameters(df_all)\n    #df_all = get_additional_bool_column_from_description(df_all)\n    return df_all\n\ndef prepare_additional_features(df):\n    def group_to_dict(group_key, column, agg_func=np.sum):\n        dict_ = df.groupby(group_key)[column].agg(agg_func).to_dict()\n        if -1 in dict_: \n            del dict_[-1]\n        mean = np.mean( list(dict_.values()) )\n        return defaultdict(lambda: mean, dict_)\n    df['different_items'] = df['invoice'].map(group_to_dict('invoice','stock_code', agg_func=np.size))\n    #df['all_quantity'] = df['invoice'].map(group_to_dict('invoice','quantity', agg_func=np.sum))\n    df['price_unit_median'] = df['invoice'].map(group_to_dict('invoice', 'price_unit', agg_func=np.median))\n    df['log_price_full_invoice'] = np.log2(df['invoice'].map(group_to_dict('invoice', 'price_total', agg_func=np.sum)) + 6)\n    df['max_return_product_invoice'] = df['invoice'].map(group_to_dict('invoice', 'cnt_p_product_cancel', agg_func=np.max))\n    df['ratio_p_product_orders'] = df['invoice'].map(group_to_dict('invoice', 'ratio_p_product_orders', agg_func=np.max))\n    return df\n        ")
+def get_feats(df):
+    feats = df.select_dtypes([np.number, np.bool]).columns
+    black_list = ['is_canceled', 'is_test', 'price_unit', 'cnt_p_product_orders']
+    return [x for x in feats if x not in black_list]
 
+def get_invoice_date_parameters(df):
+    df['year'] = df['invoice_date'].dt.year
+    df['month'] = df['invoice_date'].dt.month
+    #df['day'] = df['invoice_date'].dt.day
+    df['hour'] = df['invoice_date'].dt.hour
+    #df['minute'] = df['invoice_date'].dt.minute
+    df['day_of_year'] = df['invoice_date'].dt.dayofyear
+    df['day_of_week'] = df['invoice_date'].dt.dayofweek
+    df['week_of_year'] = df['invoice_date'].dt.weekofyear
+    #df['quarter'] = df['invoice_date'].dt.quarter
+    df['weekend'] = np.where(df['day_of_week'] < 5, 0, 1)
+    return df
 
-# In[ ]:
+def one_hot_encoding(df, column):
+    df[column] = pd.Categorical(df[column])
+    df = pd.concat([df, pd.get_dummies(df[column], prefix=column)], axis=1)
+    return df
 
+def get_additional_bool_column_from_description(df):
+    df['description'] = df['description'].astype(str)
+    for column, words in dict_additional_columns.items():
+        df[column] = df['description'].apply(lambda x: any([word in x for word in words]))
+    return df
 
+def prepare_features(df_all):
+    def group_to_dict(group_key, agg_func=np.sum):
+        train = df_all[ ~df_all['is_canceled'].isnull()]
+        dict_ = train.groupby(group_key)['is_canceled'].agg(agg_func).to_dict()
+        if -1 in dict_: 
+            del dict_[-1]
+        mean = np.mean( list(dict_.values()) )
+        return defaultdict(lambda: mean, dict_)    
+    df_all['cnt_customer_cancel'] = df_all['customer_id'].map(group_to_dict('customer_id')).astype('float64')
+    df_all['cnt_customer_orders'] = df_all['customer_id'].map(group_to_dict('customer_id', agg_func=np.size))
+    df_all['ratio_customer_orders'] = (df_all['cnt_customer_cancel']/df_all['cnt_customer_orders']).round(5)
+    
+    #df_all['cnt_product_cancel'] = df_all['stock_code'].map(group_to_dict('customer_id')).astype('float64')
+    #df_all['cnt_product_cancel_country'] = df_all['stock_code'].map(group_to_dict(['customer_id', 'country'])).astype('float64')
+    #df_all['cnt_product_orders'] = df_all['stock_code'].map(group_to_dict('customer_id', agg_func=np.size))
+    #df_all['ratio_product_orders'] = (df_all['cnt_product_cancel']/df_all['cnt_product_orders']).round(5)
+    
+    df_all['cnt_p_product_cancel'] = df_all['stock_code'].map(group_to_dict('stock_code')).astype('float64')
+    #df_all['cnt_p_product_cancel_country'] = df_all['stock_code'].map(group_to_dict(['stock_code', 'country'])).astype('float64')
+    df_all['cnt_p_product_orders'] = df_all['stock_code'].map(group_to_dict('stock_code', agg_func=np.size))
+    df_all['ratio_p_product_orders'] = (df_all['cnt_p_product_cancel']/df_all['cnt_p_product_orders']).round(5)
+    
+    df_all['unknown_buyer'] = np.where(df_all['customer_id'] == -1, True, False)
+    df_all['description_upppercase'] = df_all['description'].str.isupper().fillna(False)
+    #df_all['country_aggregated'] = df_all['country'].apply(lambda x: 'Other' if any([country in x for country in countries]) else x)
+    #df_all['cat_country'] = pd.factorize(df_all['country'])[0]
+    #df_all['cat_country2'] = pd.factorize(df_all['country_aggregated'])[0]
+    #df_all['invalid_transaction'] = 
+    df_all['log_price_total'] = np.log2(df_all['price_total'] + 6).round(2)
+    df_all = get_invoice_date_parameters(df_all)
+    #df_all = get_additional_bool_column_from_description(df_all)
+    return df_all
 
-
+def prepare_additional_features(df):
+    def group_to_dict(group_key, column, agg_func=np.sum):
+        dict_ = df.groupby(group_key)[column].agg(agg_func).to_dict()
+        if -1 in dict_: 
+            del dict_[-1]
+        mean = np.mean( list(dict_.values()) )
+        return defaultdict(lambda: mean, dict_)
+    df['different_items'] = df['invoice'].map(group_to_dict('invoice','stock_code', agg_func=np.size))
+    #df['all_quantity'] = df['invoice'].map(group_to_dict('invoice','quantity', agg_func=np.sum))
+    df['price_unit_median'] = df['invoice'].map(group_to_dict('invoice', 'price_unit', agg_func=np.median))
+    df['log_price_full_invoice'] = np.log2(df['invoice'].map(group_to_dict('invoice', 'price_total', agg_func=np.sum)) + 6)
+    df['max_return_product_invoice'] = df['invoice'].map(group_to_dict('invoice', 'cnt_p_product_cancel', agg_func=np.max))
+    df['ratio_p_product_orders'] = df['invoice'].map(group_to_dict('invoice', 'ratio_p_product_orders', agg_func=np.max))
+    return df
+        

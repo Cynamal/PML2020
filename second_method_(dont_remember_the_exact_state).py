@@ -18,8 +18,6 @@ get_ipython().run_line_magic('run', 'custom_tools_2.py')
 
 # ## Loading data
 
-# In[2]:
-
 
 try:
     if not df_all.empty:
@@ -33,7 +31,6 @@ finally:
 
 # ## Feature engineering
 
-# In[4]:
 
 
 prepared_df = prepare_features(df_all)
@@ -49,7 +46,6 @@ y_train = train['is_canceled'].astype(bool)
 
 # ## Columns importance
 
-# In[6]:
 
 
 bestfeatures = SelectKBest(score_func=f_classif, k='all')
@@ -64,7 +60,7 @@ print(featureScores.nlargest(120,'Score'))  #print 10 best features
 
 # ## Validation
 
-# In[7]:
+
 
 
 models = [
@@ -129,7 +125,6 @@ def model_train_predict(model, train, feats):
     return {'f1':scores_f1, 'recall':scores_recall, 'precision':scores_precision, 'mse':scores_mse}
 
 
-# In[10]:
 
 
 for model in models:
@@ -145,7 +140,6 @@ for model in models:
 
 # ## Getting predictions
 
-# In[11]:
 
 
 model = xgb.XGBClassifier(max_depth=5, n_estimators=100, learning_rate=0.3, seed=0)
@@ -154,9 +148,6 @@ test['is_canceled'] = model.predict(test[[feat for feat in feats if feat != 'pri
 test['total_return'] = test['price_total'] * test['is_canceled']
 result = test.groupby('invoice')['total_return'].agg(np.sum).to_frame().reset_index()
 result[ ['invoice', 'total_return'] ].to_csv('../output/xgb_and_cnt_features.csv', index=False)
-
-
-# In[ ]:
 
 
 

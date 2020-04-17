@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
 
 import pandas as pd
 import numpy as np
@@ -20,9 +18,6 @@ get_ipython().run_line_magic('run', 'validation.py')
 get_ipython().run_line_magic('run', 'features.py')
 
 
-# In[2]:
-
-
 try:
     if not df_all.empty:
         print('data already imported')
@@ -35,8 +30,6 @@ finally:
 train, test = prepare_data(df_all)
 feats = get_feats(train)
 
-
-# In[14]:
 
 
 def draw_importance_features(model, df, plot_type='gain'):
@@ -90,12 +83,6 @@ print('precision')
 print(sum(scores_precision) / len(scores_precision))
 
 
-# duplikaty
-# duplikaty, ale inna liczba
-# price unit na minusie
-
-# In[11]:
-
 
 save_results = True
 if save_results:
@@ -107,8 +94,6 @@ if save_results:
     result[ ['invoice', 'total_return'] ].to_csv('../output/xgb_and_cnt_features_classification.csv', index=False)
     result[ ['invoice', 'total_return'] ]
 
-
-# In[12]:
 
 
 regression = False
@@ -133,7 +118,6 @@ if regression:
     print(sum(scores_mse) / len(scores_mse))
 
 
-# In[8]:
 
 
 save_results = False
@@ -146,8 +130,6 @@ if save_results:
     result[ ['invoice', 'total_return'] ].to_csv('../output/xgb_and_cnt_features_regression.csv', index=False)
     result[ ['invoice', 'total_return'] ]
 
-
-# In[ ]:
 
 
 

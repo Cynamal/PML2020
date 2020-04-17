@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
 
 
 import pandas as pd
@@ -9,20 +5,14 @@ import pandas as pd
 get_ipython().run_line_magic('run', 'custom_tools.py')
 
 
-# In[2]:
-
 
 train = pd.read_hdf('../input/train_online_retail.h5')
 test = pd.read_hdf('../input/test_online_retail.h5')
 
 
-# In[5]:
-
 
 orders_train, orders_test = prepare_train_and_test(train, test)
 
-
-# In[7]:
 
 
 feats = get_features(orders_train)
@@ -32,8 +22,6 @@ X_train = orders_train[temp_feats]
 y_train = orders_train['is_canceled']
 X_test = orders_test[feats]
 
-
-# In[9]:
 
 
 from sklearn.feature_selection import SelectKBest
@@ -49,8 +37,6 @@ featureScores = pd.concat([dfcolumns,dfscores],axis=1)
 featureScores.columns = ['Specs','Score']  #naming the dataframe columns
 print(featureScores.nlargest(100,'Score'))  #print 10 best features
 
-
-# In[17]:
 
 
 feats = get_features(orders_train)
@@ -100,8 +86,6 @@ for model in models:
         print(sum(item) / len(item))
 
 
-# In[11]:
-
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import mean_squared_error as mse
@@ -114,28 +98,20 @@ y_pred = y_pred*X_test['price_total']
 mse(y_test_w['total_return'], y_pred)
 
 
-# In[12]:
-
 
 orders_to_save = orders_test.copy()
 orders_to_save['total_return'] = y_pred
 orders_to_save
 
 
-# In[13]:
-
 
 orders_to_save = orders_to_save.reset_index()
 orders_to_save[ ['invoice', 'total_return'] ].to_csv('../output/first_method.csv', index=False)
 
 
-# In[14]:
-
 
 orders_to_save[ ['invoice', 'total_return'] ]
 
-
-# In[ ]:
 
 
 
